@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Meal Planner 🌸</title>
+<style>
+:root{
+  --pink:#f7a8c4;--pink2:#ffe3ee;--pink3:#fff5f9;--rose:#d95786;
+  --yellow:#fff1a8;--green:#dff5e6;--red:#ffd9e5;--purple:#eadcff;
+  --text:#493b45;--muted:#8b7b85;--white:#fff;--line:#f0dce5;
+  --shadow:0 10px 30px rgba(125,74,101,.10);--radius:20px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;overflow-x:hidden;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:linear-gradient(135deg,#fff8fb,#fff0f6 45%,#fff9f1)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{position:sticky;top:0;width:255px;height:100vh;padding:22px 16px;background:rgba(255,255,255,.88);backdrop-filter:blur(14px);border-right:1px solid var(--line);z-index:20;overflow:auto}
+.brand{display:flex;gap:10px;align-items:center;padding:8px 10px 20px}
+.brand .logo{font-size:30px}.brand h1{font-size:20px;margin:0}.brand small{color:var(--muted)}
+.nav{display:flex;flex-direction:column;gap:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border:0;background:transparent;border-radius:14px;color:var(--text);text-align:left;transition:.18s}
+.nav-item:hover,.nav-item.active{background:var(--pink2);color:var(--rose)}
+.nav-item.dragging{opacity:.45}
+.nav-item .drag{margin-left:auto;color:#c8aab7;cursor:grab}
+.mobile-menu{display:none}
+.main{flex:1;min-width:0;padding:28px;max-width:1500px;margin:auto;width:100%}
+.topbar{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:22px}
+.page-title h2{margin:0;font-size:30px}.page-title p{margin:5px 0;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;padding:10px 14px;border-radius:13px;color:var(--text);transition:.15s;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.btn.primary{background:var(--pink);color:#fff;border-color:var(--pink)}.btn.soft{background:var(--pink3)}
+.btn.danger{background:#fff0f4;color:#b53e67}.btn.success{background:#effbf2;color:#39754d}
+.grid{display:grid;gap:16px}.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.card h3,.card h4{margin:0 0 12px}.muted{color:var(--muted)}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:15px}.toolbar .grow{flex:1}
+.input,.select,.textarea{width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px 12px;color:var(--text);outline:none}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--pink);box-shadow:0 0 0 3px var(--pink2)}
+.search{min-width:220px}.textarea{min-height:110px;resize:vertical}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#f7edf2}
+.badge.pink{background:var(--pink2);color:var(--rose)}.badge.yellow{background:var(--yellow)}.badge.green{background:var(--green)}
+.badge.purple{background:var(--purple)}
+.section-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}
+.category{margin-bottom:16px}.category-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}.category-head h3{margin:0;font-size:17px}.category-head .spacer{flex:1}
+.product-list{display:grid;gap:7px}
+.product{display:flex;align-items:center;gap:9px;border:1px solid var(--line);padding:10px 11px;border-radius:14px;transition:.15s}
+.product.status-low{background:#fff9d8}.product.status-none{background:#fff0f5}.product:hover{transform:translateY(-1px)}
+.product .name{font-weight:650;min-width:0;overflow:hidden;text-overflow:ellipsis}.product .sub{font-size:12px;color:var(--muted)}
+.product-main{flex:1;min-width:0}.product-actions{display:flex;gap:3px;flex-wrap:wrap}
+.icon-btn{border:0;background:transparent;border-radius:9px;padding:6px;font-size:16px}.icon-btn:hover{background:#f8edf3}.icon-btn.active{background:var(--pink2)}
+.check{accent-color:var(--rose)}
+.empty{padding:35px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:16px;background:#fffafc}
+.stat{padding:17px;border-radius:18px;background:#fff;border:1px solid var(--line)}.stat b{font-size:28px}.stat span{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+.progress{height:10px;background:#f4e6ed;border-radius:999px;overflow:hidden}.progress>i{display:block;height:100%;background:var(--pink);border-radius:999px}
+.recipe-card{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}.recipe-card .pct{font-size:25px;font-weight:800;color:var(--rose)}
+.ingredient-row{display:grid;grid-template-columns:1fr 130px auto;gap:7px;margin-bottom:7px}
+.suggestions{position:absolute;left:0;right:0;top:100%;z-index:40;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);max-height:180px;overflow:auto}
+.suggestion{padding:9px 11px;cursor:pointer}.suggestion:hover{background:var(--pink3)}
+.relative{position:relative}
+.modal-backdrop{position:fixed;inset:0;background:rgba(73,59,69,.35);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
+.modal{width:min(650px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:24px;padding:22px;box-shadow:0 25px 80px rgba(73,59,69,.25)}
+.modal h3{margin-top:0}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}.field.full{grid-column:1/-1}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.toast{position:fixed;right:20px;bottom:20px;z-index:200;background:#493b45;color:#fff;padding:12px 16px;border-radius:14px;box-shadow:var(--shadow);animation:pop .2s}
+@keyframes pop{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+.week-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.week-grid{display:grid;grid-template-columns:repeat(7,minmax(150px,1fr));gap:10px;overflow-x:auto}
+.day-card{min-height:270px;background:#fff;border:1px solid var(--line);border-radius:17px;padding:12px}
+.day-name{font-weight:800;color:var(--rose)}.date{font-size:12px;color:var(--muted);margin-bottom:10px}
+.meal-slot{border:1px solid var(--line);border-radius:12px;padding:9px;margin:8px 0;background:#fffafd;min-height:58px}.meal-slot strong{font-size:11px;color:var(--muted);display:block;margin-bottom:4px}.meal-slot button{border:0;background:none;text-align:left;padding:0;color:var(--text);font-weight:650;width:100%}
+.free{background:#faf8fb;color:var(--muted);text-align:center}
+.list-section{margin-bottom:18px}.shop-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #f5e9ef}.shop-row:last-child{border-bottom:0}
+.shop-main{flex:1}.shop-main s{color:var(--muted)}.shop-actions{display:flex;gap:4px;flex-wrap:wrap}
+.filter-pills{display:flex;gap:6px;flex-wrap:wrap}.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px}.pill.active{background:var(--pink2);border-color:#f2bad0;color:var(--rose)}
+.calendar-detail{display:grid;gap:10px}.detail-day{padding:12px;border:1px solid var(--line);border-radius:14px}
+.checkbox-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.notice{background:#fff8df;border:1px solid #f3e3a2;border-radius:14px;padding:12px}.success-box{background:#effbf2;border:1px solid #cce9d3;border-radius:14px;padding:12px}
+footer{padding:25px 0;color:var(--muted);font-size:12px;text-align:center}
+@media(max-width:980px){.sidebar{position:fixed;left:-280px;transition:.2s}.sidebar.open{left:0}.mobile-menu{display:inline-flex}.main{padding:18px}.grid.cols-3{grid-template-columns:1fr 1fr}.week-grid{grid-template-columns:repeat(7,180px)}}
+@media(max-width:680px){.main{width:100%;max-width:100%;}.card{padding:14px}.section-head{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions .btn{flex:1}.topbar{align-items:flex-start;flex-direction:column}.grid.cols-2,.grid.cols-3{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.ingredient-row{grid-template-columns:1fr 100px auto}.search{min-width:0}.product{align-items:flex-start}.product-actions{justify-content:flex-end}.checkbox-grid{grid-template-columns:1fr 1fr}.main{padding:13px}.page-title h2{font-size:25px}}
+.hidden{display:none!important}
+</style>
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#ffd6ec">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="My Meal Planner">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+const KEY="my-meal-planner-v1";
+const DEFAULT_CATS=["🍗 Proteína","🥦 Verduras","🍚 Hidratos","🥛 Lácteos","🍎 Fruta","🥫 Conservas","🧂 Despensa básica","🥜 Otros alimentos"];
+const OTHER_CATS={
+ "🍳 Cocina":["Papel de aluminio","Film transparente","Papel de horno","Bolsas de congelación","Servilletas","Papel de cocina","Esponjas","Estropajos","Lavavajillas","Pastillas para lavavajillas","Guantes de cocina","Bolsas de basura"],
+ "🧹 Limpieza":["Limpiador multiusos","Limpiacristales","Limpiador de baño","Desinfectante","Fregasuelos","Detergente","Suavizante","Quitamanchas","Bayetas","Trapos","Guantes de limpieza"],
+ "🧴 Higiene personal":["Gel de ducha","Champú","Acondicionador","Jabón de manos","Desodorante","Pasta de dientes","Cepillo de dientes","Hilo dental","Enjuague bucal","Cuchillas de afeitar","Crema hidratante","Protector solar","Algodón","Bastoncillos"],
+ "🛁 Baño":["Papel higiénico","Pañuelos","Toallas sanitarias","Tampones","Protectores diarios","Limpiador de WC","Ambientador","Pastillas para WC","Escobilla"],
+ "🩹 Salud":["Paracetamol","Ibuprofeno","Tiritas","Gasas","Esparadrapo","Antiséptico","Termómetro","Suero fisiológico","Mascarillas","Gel hidroalcohólico"]
+};
+const NAV=[
+ ["pantry","🥬","Mi despensa"],["other","🧴","Otros"],["recipes","🍝","Recetas"],["cook","🍳","¿Qué cocino?"],
+ ["shopping","🛒","Lista de la compra"],["calendar","📅","Calendario"],["freezer","❄️","Congelador"],["expiring","⏰","Caducan pronto"],["mealprep","🍱","Meal Prep"]
+];
+const uid=()=>crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+const SEED_PRODUCTS={
+ "🍗 Proteína":["Pechuga de pollo","Muslos de pollo","Carne picada","Filetes de ternera","Lomo de cerdo","Chuletas de cerdo","Pavo en lonchas","Jamón serrano","Jamón cocido","Chorizo","Atún en lata","Sardinas en lata","Caballa en lata","Salmón","Merluza","Bacalao","Gambas","Huevos","Anchoas en lata"],
+ "🥦 Verduras":["Lechuga","Tomate","Tomate cherry","Cebolla","Ajo","Pimiento rojo","Pimiento verde","Calabacín","Berenjena","Zanahoria","Patata","Boniato","Espinacas","Brócoli","Coliflor","Judías verdes","Champiñones","Pepino","Puerro","Calabaza","Aguacate","Limón","Perejil"],
+ "🍚 Hidratos":["Arroz","Arroz redondo","Pasta","Macarrones","Espaguetis","Fideos","Pan","Pan de molde","Tortillas de trigo","Cuscús","Harina de trigo","Harina de maíz","Pan rallado","Avena","Legumbres cocidas","Garbanzos cocidos","Lentejas cocidas","Alubias cocidas"],
+ "🥛 Lácteos":["Leche","Yogur natural","Yogur griego","Queso manchego","Queso rallado","Mozzarella","Queso fresco","Nata para cocinar","Mantequilla"],
+ "🍎 Fruta":["Manzana","Plátano","Naranja","Mandarina","Fresas","Frutos rojos","Melocotón","Pera","Uvas","Kiwi"],
+ "🥫 Conservas":["Tomate triturado","Tomate frito","Pimiento del piquillo","Aceitunas verdes","Aceitunas negras","Maíz dulce","Espárragos en conserva","Pepinillos","Alcaparras","Leche de coco"],
+ "🧂 Despensa básica":["Aceite de oliva","Aceite de girasol","Vinagre de vino","Vinagre balsámico","Sal","Pimienta negra","Pimentón dulce","Pimentón picante","Orégano","Albahaca seca","Romero","Tomillo","Comino","Canela","Nuez moscada","Curry","Laurel","Azúcar","Miel","Mostaza","Mayonesa","Ketchup","Salsa de soja","Caldo de pollo","Caldo de verduras","Caldo de pescado","Sofrito","Almendras","Nueces","Piñones","Pasas"],
+ "🥜 Otros alimentos":["Hummus","Guacamole","Crema de cacahuete","Chocolate negro","Galletas","Café","Té","Cacao en polvo","Levadura química","Levadura de panadería"]
+};
+const SEED_OTHER={
+ "🍳 Cocina":["Papel de aluminio","Film transparente","Papel de horno","Bolsas de bocadillo","Bolsas de basura","Papel de cocina","Servilletas","Palillos","Pinchos de madera","Papel vegetal","Tuppers","Botes herméticos","Esponjas","Estropajos","Lavavajillas","Pastillas para lavavajillas","Guantes de cocina"],
+ "🧹 Limpieza":["Limpiador multiusos","Limpiacristales","Limpiador de baño","Desinfectante","Fregasuelos","Detergente para ropa","Suavizante","Quitamanchas","Bayetas","Trapos de limpieza","Guantes de limpieza","Estropajo de baño","Ambientador","Recambio de fregona"],
+ "🧴 Higiene personal":["Gel de ducha","Champú","Acondicionador","Jabón de manos","Desodorante","Pasta de dientes","Cepillo de dientes","Hilo dental","Enjuague bucal","Cuchillas de afeitar","Crema hidratante","Protector solar","Algodón","Bastoncillos","Crema de manos","Bálsamo labial"],
+ "🛁 Baño":["Papel higiénico","Pañuelos","Toallitas húmedas","Toallas sanitarias","Tampones","Protectores diarios","Limpiador de WC","Pastillas para WC","Escobilla de WC","Ambientador de baño"],
+ "🩹 Salud":["Paracetamol","Ibuprofeno","Tiritas","Gasas","Esparadrapo","Antiséptico","Termómetro","Suero fisiológico","Mascarillas","Gel hidroalcohólico"]
+};
+const SEED_RECIPES=[
+ ["Tortilla de patatas","meal",[["Huevos","6 uds"],["Patata","500 g"],["Cebolla","1"],["Aceite de oliva",""]]],
+ ["Paella valenciana","meal",[["Arroz redondo","320 g"],["Pechuga de pollo",""],["Judías verdes","150 g"],["Pimiento rojo","1"],["Tomate triturado","100 g"],["Aceite de oliva",""]]],
+ ["Paella de marisco","meal",[["Arroz redondo","320 g"],["Gambas","250 g"],["Caldo de pescado","750 ml"],["Tomate triturado","100 g"],["Pimiento rojo","1"],["Ajo","2 dientes"]]],
+ ["Arroz a la cubana","meal",[["Arroz","200 g"],["Huevos","2"],["Tomate frito","150 g"],["Plátano","1"]]],
+ ["Gazpacho andaluz","meal",[["Tomate","1 kg"],["Pepino","1"],["Pimiento verde","1"],["Cebolla","1/2"],["Ajo","1 diente"],["Aceite de oliva","4 cucharadas"],["Vinagre de vino","2 cucharadas"]]],
+ ["Salmorejo cordobés","meal",[["Tomate","1 kg"],["Pan","150 g"],["Ajo","1 diente"],["Aceite de oliva","100 ml"],["Jamón serrano","80 g"],["Huevos","2"]]],
+ ["Patatas a lo pobre","meal",[["Patata","600 g"],["Cebolla","1"],["Pimiento verde","1"],["Ajo","2 dientes"],["Aceite de oliva",""]]],
+ ["Pisto manchego","meal",[["Calabacín","1"],["Berenjena","1"],["Pimiento verde","1"],["Pimiento rojo","1"],["Cebolla","1"],["Tomate triturado","400 g"],["Huevos","2"]]],
+ ["Croquetas de jamón","meal",[["Jamón serrano","120 g"],["Leche","500 ml"],["Harina de trigo","50 g"],["Mantequilla","50 g"],["Huevos","2"],["Pan rallado",""]]],
+ ["Albóndigas en salsa","meal",[["Carne picada","500 g"],["Huevos","1"],["Pan rallado","50 g"],["Ajo","2 dientes"],["Cebolla","1"],["Tomate triturado","300 g"]]],
+ ["Lentejas estofadas","meal",[["Lentejas cocidas","400 g"],["Zanahoria","2"],["Patata","2"],["Cebolla","1"],["Chorizo","100 g"],["Pimentón dulce",""]]],
+ ["Cocido madrileño fácil","meal",[["Garbanzos cocidos","400 g"],["Carne picada","200 g"],["Zanahoria","2"],["Patata","2"],["Caldo de pollo","1 l"]]],
+ ["Fabada asturiana fácil","meal",[["Alubias cocidas","400 g"],["Chorizo","100 g"],["Pimentón dulce",""]]],
+ ["Fideuá de gambas","meal",[["Fideos","250 g"],["Gambas","250 g"],["Caldo de pescado","700 ml"],["Tomate triturado","100 g"],["Ajo","2 dientes"]]],
+ ["Bacalao con tomate","meal",[["Bacalao","400 g"],["Tomate triturado","400 g"],["Cebolla","1"],["Ajo","2 dientes"]]],
+ ["Merluza a la plancha con patatas","meal",[["Merluza","400 g"],["Patata","400 g"],["Ajo","1 diente"],["Perejil",""]]],
+ ["Pollo al ajillo","meal",[["Pechuga de pollo","500 g"],["Ajo","5 dientes"],["Aceite de oliva",""]]],
+ ["Pollo al curry con yogur","meal",[["Pechuga de pollo","500 g"],["Yogur natural","125 g"],["Curry","2 cucharaditas"],["Cebolla","1"],["Arroz","200 g"]]],
+ ["Ensaladilla rusa","meal",[["Patata","500 g"],["Zanahoria","2"],["Huevos","2"],["Atún en lata","2 latas"],["Mayonesa","3 cucharadas"],["Aceitunas verdes",""]]],
+ ["Ensalada mediterránea","meal",[["Lechuga","1"],["Tomate","2"],["Pepino","1"],["Cebolla","1/2"],["Aceitunas negras","50 g"],["Queso fresco","100 g"],["Aceite de oliva",""]]],
+ ["Bocadillo de tortilla","dinner",[["Pan","1"],["Huevos","2"],["Patata","200 g"]]],
+ ["Tostas de tomate y jamón","dinner",[["Pan","2 rebanadas"],["Tomate","1"],["Jamón serrano","50 g"],["Aceite de oliva",""]]],
+ ["Revuelto de champiñones","dinner",[["Huevos","2"],["Champiñones","150 g"],["Ajo","1 diente"],["Aceite de oliva",""]]],
+ ["Crema de calabacín","dinner",[["Calabacín","2"],["Patata","1"],["Cebolla","1"],["Leche","200 ml"]]],
+ ["Tortilla francesa con ensalada","dinner",[["Huevos","2"],["Lechuga","1/2"],["Tomate","1"],["Aceite de oliva",""]]],
+ ["Sándwich mixto","dinner",[["Pan de molde","2 rebanadas"],["Jamón cocido","2 lonchas"],["Queso manchego","2 lonchas"]]],
+ ["Huevos rotos con jamón","dinner",[["Huevos","2"],["Patata","300 g"],["Jamón serrano","60 g"],["Aceite de oliva",""]]],
+ ["Tosta de aguacate y huevo","dinner",[["Pan","2 rebanadas"],["Aguacate","1"],["Huevos","2"],["Limón",""]]],
+ ["Pimientos rellenos de atún","meal",[["Pimiento del piquillo","8 uds"],["Atún en lata","2 latas"],["Tomate frito","100 g"],["Huevos","1"],["Mayonesa","2 cucharadas"]]],
+ ["Macarrones con tomate y chorizo","meal",[["Macarrones","250 g"],["Tomate frito","300 g"],["Chorizo","100 g"],["Queso rallado","50 g"]]],
+ ["Espaguetis con gambas al ajillo","meal",[["Espaguetis","250 g"],["Gambas","250 g"],["Ajo","3 dientes"],["Aceite de oliva",""]]],
+ ["Pollo con verduras","meal",[["Pechuga de pollo","400 g"],["Calabacín","1"],["Pimiento rojo","1"],["Zanahoria","2"],["Cebolla","1"]]],
+ ["Berenjenas rellenas de carne","meal",[["Berenjena","2"],["Carne picada","300 g"],["Cebolla","1"],["Tomate triturado","200 g"],["Queso rallado",""]]],
+ ["Judías verdes con patata y huevo","meal",[["Judías verdes","400 g"],["Patata","300 g"],["Huevos","2"],["Aceite de oliva",""]]],
+ ["Ensalada de garbanzos","meal",[["Garbanzos cocidos","400 g"],["Tomate","2"],["Pimiento verde","1"],["Cebolla","1/2"],["Atún en lata","1 lata"],["Aceite de oliva",""]]]
+];
+function seedProducts(){const out=[];for(const [cat,names] of Object.entries(SEED_PRODUCTS))for(const name of names)out.push({id:uid(),name,category:cat,status:"have",checked:false,frozen:false,expiry:"",autoBlocked:false,manualShop:true});return out}
+function seedOther(){const out=[];for(const [cat,names] of Object.entries(SEED_OTHER))for(const name of names)out.push({id:uid(),name,category:cat,status:"have",checked:false,frozen:false,expiry:"",autoBlocked:false,manualShop:true});return out}
+function seedRecipes(){return SEED_RECIPES.map(([name,type,ingredients])=>({id:uid(),name,type,ingredients:ingredients.map(([name,qty])=>({name,qty})),instructions:"Preparar los ingredientes, cocinar siguiendo el método tradicional y ajustar sal y especias al gusto."}))}
+
+function initialState(){
+ return {products:seedProducts(),other:seedOther(),categories:[...DEFAULT_CATS],otherCategories:Object.keys(SEED_OTHER),recipes:seedRecipes(),shopping:{defer:[],later:[],rare:[],bought:[]},planning:{},settings:{expiryDays:7,mealPrepDays:["Domingo","Miércoles"],nightOff:2,nav:NAV.map(x=>x[0]),prepExcluded:[]},route:"pantry"};
+}
+let state=load();
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));return x?normalize(x):initialState()}catch(e){return initialState()}}
+function normalize(x){
+ const d=initialState(); x={...d,...x}; x.settings={...d.settings,...(x.settings||{})};
+ x.otherCategories=Array.isArray(x.otherCategories)?x.otherCategories:Object.keys(SEED_OTHER); x.shopping={...d.shopping,...(x.shopping||{})}; x.shopping.rare=Array.isArray(x.shopping.rare)?x.shopping.rare:[];
+ x.products=Array.isArray(x.products)?x.products:[];x.other=Array.isArray(x.other)?x.other:[];x.recipes=Array.isArray(x.recipes)?x.recipes:[];x.planning=x.planning||{};
+ // Si la versión anterior tenía secciones vacías, las rellenamos una sola vez sin tocar datos existentes.
+ if(!x.products.length)x.products=d.products;
+ if(!x.other.length)x.other=d.other;
+ if(!x.recipes.length)x.recipes=d.recipes;
+ // Añade a una versión anterior cualquier categoría/artículo base de “Otros” que falte.
+ for(const cat of Object.keys(SEED_OTHER)){
+   if(!x.otherCategories.includes(cat))x.otherCategories.push(cat);
+   for(const name of SEED_OTHER[cat]){
+     if(!x.other.some(p=>norm(p.name)===norm(name)&&norm(p.category)===norm(cat))){x.other.push({id:uid(),name,category:cat,status:"have",checked:false,frozen:false,expiry:"",autoBlocked:false,manualShop:true});}
+   }
+ }
+ x.products.forEach(p=>{if(p.manualShop===undefined)p.manualShop=true;if(p.autoBlocked===undefined)p.autoBlocked=false;if(p.frozen===undefined)p.frozen=false;if(p.expiry===undefined)p.expiry=""});
+ x.other.forEach(p=>{if(p.manualShop===undefined)p.manualShop=true;if(p.autoBlocked===undefined)p.autoBlocked=false;if(p.frozen===undefined)p.frozen=false;if(p.expiry===undefined)p.expiry=""});
+ return x;
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function norm(s){return String(s||"").trim().toLocaleLowerCase("es")}
+function toast(msg){const el=document.createElement("div");el.className="toast";el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),2300)}
+function todayISO(){return new Date().toISOString().slice(0,10)}
+function daysUntil(date){return Math.ceil((new Date(date+"T23:59:59")-new Date())/86400000)}
+function formatDate(d){if(!d)return "";const [y,m,day]=d.split("-");return `${day}/${m}/${y}`}
+function productByName(name){
+ return state.products.find(p=>norm(p.name)===norm(name)) || state.other.find(p=>norm(p.name)===norm(name));
+}
+function available(name){
+ const p=productByName(name); return !!p && p.status!=="none";
+}
+function categories(type){return type==="other"?state.otherCategories:state.categories}
+function routeTitle(r){return NAV.find(x=>x[0]===r)?.[2]||"My Meal Planner"}
+function setRoute(r){state.route=r;save();render()}
+function render(){
+ const app=document.getElementById("app");
+ app.innerHTML=`<div class="app">
+   <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="logo">🌸</div><div><h1>My Meal Planner</h1><small>girly pop pantry ✨</small></div></div>
+    <nav class="nav" id="nav">${state.settings.nav.map((r,i)=>{const n=NAV.find(x=>x[0]===r);return `<button class="nav-item ${state.route===r?"active":""}" draggable="true" data-nav="${r}" title="Arrastra para reordenar"><span>${n[1]}</span><span>${n[2]}</span><span class="drag">⠿</span></button>`}).join("")}</nav>
+    <div style="margin-top:15px"><button class="btn soft" style="width:100%" onclick="openSettings()">⚙️ Configuración</button></div>
+   </aside>
+   <main class="main">
+    <div class="topbar"><div class="page-title"><button class="btn mobile-menu" onclick="toggleMenu()">☰</button><h2>${routeTitle(state.route)}</h2><p>Todo conectado, guardado y listo para organizar tu semana 💗</p></div><div class="actions">${state.route==="shopping"?`<button class="btn soft" onclick="showDataHelp()">💾 Datos</button>`:""}</div></div>
+    <div id="view"></div><footer>My Meal Planner · los datos se guardan localmente en este navegador 🌷</footer>
+   </main>
+ </div>`;
+ document.querySelectorAll(".nav-item").forEach(b=>{b.onclick=()=>setRoute(b.dataset.nav);b.ondragstart=e=>{e.dataTransfer.setData("text/plain",b.dataset.nav);b.classList.add("dragging")};b.ondragend=()=>b.classList.remove("dragging");b.ondragover=e=>e.preventDefault();b.ondrop=e=>{e.preventDefault();reorderNav(e.dataTransfer.getData("text/plain"),b.dataset.nav)}});
+ renderView();
+}
+function reorderNav(a,b){if(!a||!b||a===b)return;const arr=state.settings.nav.filter(x=>x!==a);const i=arr.indexOf(b);arr.splice(i<0?arr.length:i,0,a);state.settings.nav=arr;save();render()}
+function toggleMenu(){document.getElementById("sidebar")?.classList.toggle("open")}
+function renderView(){
+ const v=document.getElementById("view"); if(!v)return;
+ const fn={pantry:renderPantry,other:renderOther,recipes:renderRecipes,cook:renderCook,shopping:renderShopping,calendar:renderCalendar,freezer:renderFreezer,expiring:renderExpiring,mealprep:renderMealPrep}[state.route]||renderPantry;
+ v.innerHTML=fn();
+}
+function productSection(type,query="",cat="all"){
+ const arr=type==="other"?state.other:state.products;
+ let data=arr.filter(p=>!query||norm(p.name).includes(norm(query))).filter(p=>cat==="all"||p.category===cat);
+ return categories(type).map(c=>{
+   const items=data.filter(p=>p.category===c).sort((a,b)=>a.name.localeCompare(b.name,"es"));
+   const all=(type==="other"?state.other:state.products).filter(p=>p.category===c);
+   if(!items.length && query)return "";
+   const marked=all.length&&all.every(p=>p.status==="have");
+   return `<section class="category"><div class="category-head"><h3>${esc(c)}</h3><span class="spacer"></span><span class="muted">${all.length}</span><button class="btn primary" onclick="openProductModal('${type}',null,'${esc(c)}')">＋ Añadir</button><button class="btn soft" onclick="toggleCategory('${type}','${esc(c)}')">${marked?'🚫 Poner todos como "No tengo"':'💗 Poner todos como "Tengo"'}</button><button class="icon-btn" onclick="renameCategory('${type}','${esc(c)}')" title="Editar categoría">✏️</button><button class="icon-btn" onclick="deleteCategory('${type}','${esc(c)}')" title="Eliminar categoría">🗑️</button></div>
+   <div class="product-list">${items.length?items.map(p=>productRow(p,type)).join(""):`<div class="empty">No hay productos aquí${query?" que coincidan con la búsqueda":""}. 🌷</div>`}</div></section>`;
+ }).join("");
+}
+function productRow(p,type){
+ const st=p.status==="have"?"status-have":p.status==="low"?"status-low":"status-none";
+ const icon=p.status==="have"?"💗":p.status==="low"?"💛":"🚫";
+ return `<div class="product ${st}">
+  <input class="check" type="checkbox" ${p.status==="have"?"checked":""} onchange="toggleAvailability('${type}','${p.id}',this.checked)" title="${p.status==="have"?"Tengo":"No tengo"}">
+  <div class="product-main"><div class="name">${esc(p.name)}</div><div class="sub">${icon} ${p.status==="have"?"Tengo":p.status==="low"?"Queda poco":"No tengo"}${p.expiry?` · ⏰ ${formatDate(p.expiry)}`:""}${type==="pantry"&&p.frozen?" · ❄️":""}</div></div>
+  <div class="product-actions">
+   <button class="icon-btn ${p.status==="have"?"active":""}" onclick="setStatus('${type}','${p.id}','have')" title="Tengo">💗</button><button class="icon-btn ${p.status==="low"?"active":""}" onclick="setStatus('${type}','${p.id}','low')" title="Queda poco">💛</button><button class="icon-btn ${p.status==="none"?"active":""}" onclick="setStatus('${type}','${p.id}','none')" title="No tengo">🚫</button>${type==="pantry"?`<button class="icon-btn ${p.frozen?"active":""}" onclick="toggleFrozen('${p.id}')" title="Congelador">❄️</button>`:""}<button class="icon-btn ${p.expiry?"active":""}" onclick="setExpiry('${p.id}')" title="Caducidad">⏰</button>
+   <button class="icon-btn" onclick="editProduct('${type}','${p.id}')">✏️</button><button class="icon-btn" onclick="deleteProduct('${type}','${p.id}')">🗑️</button>
+  </div></div>`;
+}
+function renderPantry(){
+ const count=state.products.length, low=state.products.filter(p=>p.status==="low").length, none=state.products.filter(p=>p.status==="none").length;
+ return `<div class="grid cols-3"><div class="stat"><b>${count}</b><span>productos</span></div><div class="stat"><b>${low}</b><span>quedan poco 💛</span></div><div class="stat"><b>${none}</b><span>no tengo 🚫</span></div></div>
+ <div class="card" style="margin-top:16px"><div class="section-head"><div><h3>🥬 Mi despensa</h3><span class="muted">Los estados alimentan automáticamente la lista de compra.</span></div></div>
+ <div class="toolbar"><input class="input search grow" id="pantrySearch" placeholder="🔎 Buscar producto..." oninput="refreshProducts('pantry')"><select class="select" id="pantryCat" onchange="refreshProducts('pantry')"><option value="all">Todas las categorías</option>${categories("pantry").map(c=>`<option>${esc(c)}</option>`).join("")}</select><button class="btn soft" onclick="toggleAll('pantry')">${state.products.length&&state.products.every(p=>p.status==="have")?'🚫 Poner todos como "No tengo"':'💗 Poner todos como "Tengo"'}</button><button class="btn" onclick="openCategoryModal('pantry')">＋ Categoría</button></div>
+ <div id="productContainer">${productSection("pantry")}</div></div>`;
+}
+function refreshProducts(type){
+ const q=document.getElementById(type==="pantry"?"pantrySearch":"otherSearch")?.value||"";
+ const c=document.getElementById(type==="pantry"?"pantryCat":"otherCat")?.value||"all";
+ const el=document.getElementById("productContainer");if(el)el.innerHTML=productSection(type,q,c);
+}
+function renderOther(){
+ return `<div class="card"><div class="section-head"><div><h3>🧴 Otros</h3><span class="muted">Productos no alimentarios. Sin autocompletado.</span></div></div>
+ <div class="toolbar"><input class="input search grow" id="otherSearch" placeholder="🔎 Buscar producto..." oninput="refreshProducts('other')"><select class="select" id="otherCat" onchange="refreshProducts('other')"><option value="all">Todas las categorías</option>${categories("other").map(c=>`<option>${esc(c)}</option>`).join("")}</select><button class="btn soft" onclick="toggleAll('other')">${state.other.length&&state.other.every(p=>p.status==="have")?'🚫 Poner todos como "No tengo"':'💗 Poner todos como "Tengo"'}</button><button class="btn" onclick="openCategoryModal('other')">＋ Categoría</button></div>
+ <div id="productContainer">${productSection("other")}</div></div>`;
+}
+function openProductModal(type,id=null,presetCategory=null){
+ const p=id?(type==="other"?state.other:state.products).find(x=>x.id===id):null;
+ const cats=categories(type);
+ const selectedCategory=presetCategory || (p && p.category) || cats[0];
+ modal(`<h3>${p?"✏️ Editar producto":"✨ Añadir producto"}</h3>
+ <div class="form-grid"><div class="field"><label>Producto</label><input class="input" id="mName" value="${esc(p?.name||"")}"></div><div class="field"><label>Categoría</label><select class="select" id="mCat">${cats.map(c=>`<option ${selectedCategory===c?"selected":""}>${esc(c)}</option>`).join("")}</select></div>
+ <div class="field"><label>Estado</label><select class="select" id="mStatus"><option value="have" ${p?.status==="have"?"selected":""}>💗 Tengo</option><option value="low" ${p?.status==="low"?"selected":""}>💛 Queda poco</option><option value="none" ${p?.status==="none"?"selected":""}>🚫 No tengo</option></select></div>
+ ${type==="pantry"?`<div class="field"><label>Caducidad (opcional)</label><input class="input" type="date" id="mExpiry" value="${p?.expiry||""}"></div>`:""}
+ </div>
+ <div class="modal-actions"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveProduct('${type}','${id||""}')">Guardar</button></div>`);
+}
+function saveProduct(type,id){
+ const name=document.getElementById("mName").value.trim(),cat=document.getElementById("mCat").value,status=document.getElementById("mStatus").value,expiry=document.getElementById("mExpiry")?.value||"";
+ if(!name)return toast("Escribe un nombre 🌷");
+ const arr=type==="other"?state.other:state.products;
+ if(arr.some(p=>norm(p.name)===norm(name)&&norm(p.category)===norm(cat)&&p.id!==id))return toast("Ese producto ya existe en esta categoría 💗");
+ if(id){const p=arr.find(x=>x.id===id);Object.assign(p,{name,category:cat,status,expiry})}
+ else arr.push({id:uid(),name,category:cat,status,checked:false,frozen:false,expiry,autoBlocked:false,manualShop:true});
+ save();closeModal();render();
+}
+function editProduct(type,id){openProductModal(type,id)}
+function deleteProduct(type,id){
+ if(!confirm("¿Eliminar este producto?"))return;
+ const arr=type==="other"?state.other:state.products; const i=arr.findIndex(p=>p.id===id);if(i<0)return;
+ arr.splice(i,1);state.shopping.defer=state.shopping.defer.filter(x=>x.productId!==id);state.shopping.later=state.shopping.later.filter(x=>x.productId!==id);save();render();toast("Producto eliminado");
+}
+function setStatus(type,id,status){
+ const p=(type==="other"?state.other:state.products).find(x=>x.id===id);if(!p)return;p.status=status;save();render();toast("Estado actualizado ✨")
+}
+function toggleChecked(type,id,val){const p=(type==="other"?state.other:state.products).find(x=>x.id===id);if(p){p.checked=val;save()}}
+function toggleAvailability(type,id,val){const p=(type==="other"?state.other:state.products).find(x=>x.id===id);if(p){p.status=val?"have":"none";p.checked=val;save();render()}}
+function toggleAll(type){const arr=type==="other"?state.other:state.products;const allHave=arr.length&&arr.every(p=>p.status==="have");arr.forEach(p=>p.status=allHave?"none":"have");save();render();toast(allHave?"Todos marcados como “No tengo”":"Todos marcados como “Tengo”")}
+function toggleCategory(type,cat){const arr=(type==="other"?state.other:state.products).filter(p=>p.category===cat);const allHave=arr.length&&arr.every(p=>p.status==="have");arr.forEach(p=>p.status=allHave?"none":"have");save();render();toast(allHave?"Categoría marcada como “No tengo”":"Categoría marcada como “Tengo”")}
+function toggleFrozen(id){const p=state.products.find(x=>x.id===id);if(p){p.frozen=!p.frozen;save();render()}}
+function setExpiry(id){const p=state.products.find(x=>x.id===id);if(!p)return;const d=prompt("Fecha de caducidad (AAAA-MM-DD):",p.expiry||"");if(d===null)return;if(d&&!/^\d{4}-\d{2}-\d{2}$/.test(d))return toast("Formato no válido");p.expiry=d;save();render()}
+function openCategoryModal(type){
+ modal(`<h3>📂 Nueva categoría</h3><input class="input" id="catName" placeholder="Nombre de categoría"><div class="modal-actions"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="createCategory('${type}')">Crear</button></div>`)
+}
+function createCategory(type){const n=document.getElementById("catName").value.trim();if(!n)return;const arr=type==="other"?state.otherCategories:state.categories;if(arr.some(x=>norm(x)===norm(n)))return toast("La categoría ya existe");arr.push(n);save();closeModal();render()}
+function renameCategory(type,old){
+ const n=prompt("Nuevo nombre de categoría:",old);if(n===null)return;n=n.trim();if(!n||norm(n)===norm(old))return;
+ const cats=type==="other"?state.otherCategories:state.categories;if(cats.some(x=>norm(x)===norm(n)))return toast("La categoría ya existe");
+ const i=cats.indexOf(old);if(i>=0)cats[i]=n;(type==="other"?state.other:state.products).forEach(p=>{if(p.category===old)p.category=n});save();render()
+}
+function deleteCategory(type,cat){
+ const cats=type==="other"?state.otherCategories:state.categories;if(cats.length<=1)return toast("Debe quedar al menos una categoría");
+ if(!confirm(`¿Eliminar "${cat}"? Sus productos pasarán a la primera categoría disponible.`))return;
+ const target=cats.find(x=>x!==cat);const i=cats.indexOf(cat);if(i>=0)cats.splice(i,1);(type==="other"?state.other:state.products).forEach(p=>{if(p.category===cat)p.category=target});save();render()
+}
+function renderFreezer(){
+ const a=state.products.map(p=>({...p,_type:"pantry"})).filter(p=>p.frozen).sort((x,y)=>x.name.localeCompare(y.name,"es"));
+ return `<div class="card"><div class="section-head"><div><h3>❄️ Congelador</h3><span class="muted">${a.length} artículos congelados · son los mismos datos de Despensa.</span></div></div>${a.length?`<div class="product-list">${a.map(p=>productRow(p,p._type)).join("")}</div>`:`<div class="empty">No tienes nada marcado como congelado. Pulsa ❄️ desde Despensa.</div>`}</div>`;
+}
+function renderExpiring(){
+ const days=Math.max(0,Number(state.settings.expiryDays)||7), now=new Date();
+ const a=state.products.map(p=>({...p,_type:"pantry"})).filter(p=>p.expiry).map(p=>({...p,days:daysUntil(p.expiry)})).filter(p=>p.days>=0&&p.days<=days).sort((a,b)=>a.days-b.days);
+ return `<div class="card"><div class="section-head"><div><h3>⏰ Caducan pronto</h3><span class="muted">Se genera automáticamente desde las fechas de Despensa.</span></div><div style="display:flex;gap:7px;align-items:center"><span>Mostrar próximos</span><input class="input" style="width:85px" type="number" min="0" value="${days}" onchange="setExpiryDays(this.value)"> <span>días</span></div></div>
+ ${a.length?`<div class="product-list">${a.map(p=>`<div class="product ${p.days<=2?"status-none":p.days<=4?"status-low":""}"><div class="product-main"><div class="name">${esc(p.name)}</div><div class="sub">${esc(p.category)} · ⏰ ${formatDate(p.expiry)}</div></div><span class="badge ${p.days<=2?"pink":p.days<=4?"yellow":"green"}">${p.days===0?"hoy":p.days===1?"1 día":p.days+" días"}</span><button class="icon-btn" onclick="setExpiry('${p.id}')">✏️</button></div>`).join("")}</div>`:`<div class="empty">Nada caduca dentro de ${days} días 🎀</div>`}</div>`;
+}
+function setExpiryDays(v){state.settings.expiryDays=Math.max(0,Number(v)||0);save();render()}
+function renderRecipes(){
+ return `<div class="card"><div class="section-head"><div><h3>🍝 Recetas</h3><span class="muted">Solo recetas: ingredientes, cantidades e instrucciones.</span></div><button class="btn primary" onclick="openRecipeModal()">＋ Nueva receta</button></div>
+ <div class="toolbar"><input class="input search grow" id="recipeSearch" placeholder="🔎 Buscar receta..." oninput="refreshRecipes()"><div class="filter-pills"><button class="pill ${!state.recipeFilter?"active":""}" onclick="setRecipeFilter('')">Todas</button><button class="pill ${state.recipeFilter==="meal"?"active":""}" onclick="setRecipeFilter('meal')">☀️ Comida</button><button class="pill ${state.recipeFilter==="dinner"?"active":""}" onclick="setRecipeFilter('dinner')">🌙 Cena</button></div></div>
+ <div id="recipeContainer">${recipeCards()}</div></div>`;
+}
+function setRecipeFilter(x){state.recipeFilter=x;render()}
+function recipeCards(){
+ const q=document.getElementById("recipeSearch")?.value||"",f=state.recipeFilter||"";
+ return state.recipes.filter(r=>!q||norm(r.name).includes(norm(q))).filter(r=>!f||(f==="meal"&&r.type!=="dinner")||(f==="dinner"&&r.type!=="meal")).sort((a,b)=>a.name.localeCompare(b.name,"es")).map(r=>{
+ const typeLabel=r.type==="meal"?"☀️ Comida":r.type==="dinner"?"🌙 Cena":"☀️🌙 Ambas";
+ return `<div class="card recipe-card" style="margin-bottom:9px"><div><h3 style="margin-bottom:5px">${esc(r.name)}</h3><span class="badge pink">${typeLabel}</span><p class="muted">${r.ingredients.length} ingredientes</p></div><div class="actions"><button class="btn" onclick="openRecipeModal('${r.id}')">✏️ Editar</button><button class="btn danger" onclick="deleteRecipe('${r.id}')">🗑️</button></div></div>`;
+ }).join("")||`<div class="empty">Aún no hay recetas. Crea la primera 🌸</div>`;
+}
+function refreshRecipes(){const e=document.getElementById("recipeContainer");if(e)e.innerHTML=recipeCards()}
+function openRecipeModal(id=null){
+ const r=id?state.recipes.find(x=>x.id===id):null;
+ let ingredients=r?.ingredients||[];
+ modal(`<h3>${r?"✏️ Editar receta":"🍝 Nueva receta"}</h3>
+ <div class="field"><label>Nombre</label><input class="input" id="rName" value="${esc(r?.name||"")}"></div>
+ <div class="field" style="margin-top:10px"><label>Tipo de comida</label><select class="select" id="rType"><option value="meal" ${r?.type==="meal"?"selected":""}>☀️ Solo comida</option><option value="dinner" ${r?.type==="dinner"?"selected":""}>🌙 Solo cena</option><option value="both" ${!r||r?.type==="both"?"selected":""}>☀️🌙 Comida y cena</option></select></div>
+ <div style="margin-top:15px"><div class="section-head"><h4>Ingredientes</h4><button class="btn soft" onclick="addIngredientRow()">＋ Ingrediente</button></div><div id="ingredientRows">${ingredients.map((x,i)=>ingredientRow(x,i)).join("")}</div><div class="muted" style="font-size:12px;margin-top:6px">Puedes escribir ingredientes nuevos. El sistema ofrece sugerencias de Despensa y permite añadir uno nuevo sin salir de Recetas.</div></div>
+ <div class="field" style="margin-top:14px"><label>Instrucciones</label><textarea class="textarea" id="rInstructions">${esc(r?.instructions||"")}</textarea></div>
+ <div class="modal-actions"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveRecipe('${id||""}')">Guardar receta</button></div>`);
+ if(!ingredients.length)addIngredientRow();
+}
+function ingredientRow(x={},i){
+ const n=x.name||"",q=x.qty||"";
+ return `<div class="ingredient-row relative" data-ing="${i}"><input class="input ing-name" value="${esc(n)}" placeholder="Ingrediente" oninput="showSuggestions(this)"><input class="input ing-qty" value="${esc(q)}" placeholder="Cantidad opcional"><button class="icon-btn" onclick="this.parentElement.remove()">🗑️</button><div class="suggestions hidden"></div></div>`;
+}
+function addIngredientRow(){const el=document.getElementById("ingredientRows");if(el)el.insertAdjacentHTML("beforeend",ingredientRow({},Date.now()))}
+function showSuggestions(input){
+ const box=input.parentElement.querySelector(".suggestions"),q=norm(input.value);
+ if(!q){box.classList.add("hidden");return}
+ const names=[...state.products.map(p=>p.name),...state.other.map(p=>p.name)].filter((x,i,a)=>a.findIndex(y=>norm(y)===norm(x))===i);
+ const matches=names.filter(n=>norm(n).includes(q)).slice(0,8);
+ box.innerHTML=[...matches.map(n=>`<div class="suggestion" onclick="chooseIngredient(this,'${esc(n)}')">🍅 ${esc(n)}</div>`),`<div class="suggestion" onclick="newIngredient('${input.dataset.id||""}',this)">➕ Añadir “${esc(input.value)}”</div>`].join("");
+ box.classList.remove("hidden");
+}
+function chooseIngredient(el,name){const row=el.closest(".ingredient-row");row.querySelector(".ing-name").value=name;el.parentElement.classList.add("hidden")}
+function newIngredient(_,el){
+ const row=el.closest(".ingredient-row"),name=row.querySelector(".ing-name").value.trim();if(!name)return;
+ if(confirm(`“${name}” no existe. ¿Añadirlo también a Mi Despensa?`)){addPantryIngredient(name)}
+ row.querySelector(".ing-name").value=name;el.parentElement.classList.add("hidden")
+}
+function addPantryIngredient(name){
+ if(productByName(name))return;
+ state.products.push({id:uid(),name,category:state.categories[0],status:"none",checked:false,frozen:false,expiry:"",autoBlocked:false,manualShop:false});save();toast("Añadido a Despensa 🌸")
+}
+function saveRecipe(id){
+ const name=document.getElementById("rName").value.trim(),type=document.getElementById("rType").value;
+ if(!name)return toast("Escribe un nombre");
+ const ingredients=[...document.querySelectorAll("#ingredientRows .ingredient-row")].map(row=>({name:row.querySelector(".ing-name").value.trim(),qty:row.querySelector(".ing-qty").value.trim()})).filter(x=>x.name);
+ if(!ingredients.length)return toast("Añade al menos un ingrediente");
+ const r={id:id||uid(),name,type,ingredients,instructions:document.getElementById("rInstructions").value.trim()};
+ const old=state.recipes.findIndex(x=>x.id===r.id);if(old>=0)state.recipes[old]=r;else state.recipes.push(r);save();closeModal();render();toast("Receta guardada 💗")
+}
+function deleteRecipe(id){if(confirm("¿Eliminar esta receta?")){state.recipes=state.recipes.filter(r=>r.id!==id);for(const k of Object.keys(state.planning))state.planning[k]=state.planning[k]?.filter(x=>x.recipeId!==id);save();render();}}
+function recipeAvailability(r){const total=r.ingredients.length;if(!total)return 0;return Math.round(r.ingredients.filter(i=>available(i.name)).length/total*100)}
+function renderCook(){
+ const f=state.cookFilter||"both";
+ const rs=state.recipes.filter(r=>f==="meal"?r.type!=="dinner":f==="dinner"?r.type!=="meal":true).map(r=>({...r,pct:recipeAvailability(r)})).sort((a,b)=>b.pct-a.pct||a.name.localeCompare(b.name,"es"));
+ return `<div class="card"><div class="section-head"><div><h3>🍳 ¿Qué cocino?</h3><span class="muted">Calculado con lo que tienes disponible ahora mismo.</span></div></div>
+ <div class="filter-pills" style="margin-bottom:14px"><button class="pill ${f==="meal"?"active":""}" onclick="setCookFilter('meal')">☀️ Comidas</button><button class="pill ${f==="dinner"?"active":""}" onclick="setCookFilter('dinner')">🌙 Cenas</button><button class="pill ${f==="both"?"active":""}" onclick="setCookFilter('both')">☀️🌙 Ambas</button></div>
+ ${rs.length?rs.map(r=>`<div class="card recipe-card" style="margin-bottom:9px"><div style="flex:1"><h3>${esc(r.name)}</h3><div class="progress" style="margin:9px 0"><i style="width:${r.pct}%"></i></div><div class="muted">${r.ingredients.filter(i=>available(i.name)).length} disponibles · ${r.ingredients.filter(i=>!available(i.name)).length} faltan</div><div style="margin-top:8px"><span class="badge green">Disponibles: ${r.ingredients.filter(i=>available(i.name)).map(i=>esc(i.name)).join(", ")||"ninguno"}</span></div><div style="margin-top:5px"><span class="badge pink">Faltan: ${r.ingredients.filter(i=>!available(i.name)).map(i=>esc(i.name)).join(", ")||"ninguno"}</span></div></div><div class="pct">${r.pct}%</div></div>`).join(""):`<div class="empty">No hay recetas que coincidan. Crea recetas en 🍝 Recetas para empezar.</div>`}</div>`;
+}
+function setCookFilter(x){state.cookFilter=x;render()}
+function shoppingEntries(){
+ const map=new Map();
+ function add(p,type,reason="availability"){
+   if(!p||p.autoBlocked)return;
+   const key=type+":"+norm(p.name);
+   if(!map.has(key))map.set(key,{key,productId:p.id,name:p.name,category:p.category,type,reason,checked:false});
+ }
+ state.products.filter(p=>p.status!=="have").forEach(p=>add(p,"pantry","Despensa"));
+ state.other.filter(p=>p.status!=="have").forEach(p=>add(p,"other","Otros"));
+ for(const [day,slots] of Object.entries(state.planning))for(const slot of ["meal","dinner"]){
+   const rid=slots?.[slot]?.recipeId;if(!rid)continue;const r=state.recipes.find(x=>x.id===rid);if(!r)continue;
+   r.ingredients.forEach(i=>{const p=productByName(i.name);if(!p)add({id:"need:"+norm(i.name),name:i.name,category:"Necesidades de planificación",status:"none",manualShop:true},"pantry","Planificación")});
+ }
+ return [...map.values()];
+}
+function isInList(list,p){return list.some(x=>x.key===p.key)}
+function renderShopping(){
+ const active=shoppingEntries().filter(p=>!state.shopping.defer.some(x=>x.key===p.key)&&!state.shopping.later.some(x=>x.key===p.key)&&!state.shopping.rare.some(x=>x.key===p.key));
+ const pct=active.length?Math.round(active.filter(p=>state.shopping.bought.some(x=>x.key===p.key)).length/active.length*100):0;
+ const group=(type)=>{const a=active.filter(p=>p.type===type);const cats=[...new Set(a.map(p=>p.category))];return cats.map(c=>`<div class="list-section"><h4>${esc(c)}</h4>${a.filter(p=>p.category===c).map(shopRow).join("")}</div>`).join("")||`<div class="empty">Nada pendiente en ${type==="pantry"?"Despensa":"Otros"} 🎀</div>`};
+ return `<div class="grid cols-3"><div class="stat"><b>${active.length}</b><span>en lista activa</span></div><div class="stat"><b>${pct}%</b><span>comprado</span></div><div class="stat"><b>${state.shopping.defer.length+state.shopping.later.length+state.shopping.rare.length}</b><span>aparcados</span></div></div>
+ <div class="card" style="margin-top:16px"><div class="section-head"><div><h3>🛒 Lista de la compra</h3><span class="muted">Fuente: Despensa + Otros + necesidades del Calendario.</span></div><div class="actions"><button class="btn primary" onclick="finishShopping()">🛒 Finalizar compra</button></div></div><div class="progress" style="margin-bottom:18px"><i style="width:${pct}%"></i></div>
+ <h3>🥬 Despensa</h3>${group("pantry")}<h3>🏠 Otros</h3>${group("other")}
+ <hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><div class="grid cols-3"><div><h3>💗 Dejar para después</h3><div class="muted" style="font-size:12px;margin:-5px 0 8px">Volverán automáticamente al terminar esta compra.</div>${parkingList("defer")}</div><div><h3>🕐 Comprar más adelante</h3><div class="muted" style="font-size:12px;margin:-5px 0 8px">Solo vuelven cuando tú decidas añadirlos.</div>${parkingList("later")}</div><div><h3>🚫 No suelo comprar</h3><div class="muted" style="font-size:12px;margin:-5px 0 8px">No aparecerán automáticamente hasta que los reactives.</div>${parkingList("rare")}</div></div></div>`;
+}
+function shopRow(p){
+ const bought=state.shopping.bought.some(x=>x.key===p.key);
+ return `<div class="shop-row"><input class="check" type="checkbox" ${bought?"checked":""} onchange="toggleBought('${esc(p.key)}',this.checked)"><div class="shop-main">${bought?`<s>${esc(p.name)}</s>`:`<strong>${esc(p.name)}</strong>`}<div class="sub">${esc(p.category)} · ${esc(p.reason)}</div></div><div class="shop-actions"><button class="icon-btn" onclick="park('${esc(p.key)}','defer')" title="Dejar para después">💗</button><button class="icon-btn" onclick="park('${esc(p.key)}','later')" title="Comprar más adelante">🕐</button><button class="icon-btn" onclick="park('${esc(p.key)}','rare')" title="No suelo comprar">🚫</button></div></div>`;
+}
+function parkingList(kind){
+ const a=state.shopping[kind]||[];if(!a.length)return `<div class="empty">Vacío 🌷</div>`;
+ return a.map(x=>`<div class="shop-row"><div class="shop-main"><strong>${esc(x.name)}</strong><div class="sub">${esc(x.category||"")}</div></div><button class="btn soft" onclick="restorePark('${esc(x.key)}','${kind}')">🛒 ${kind==="rare"?"Volver a la lista":"Añadir a la lista"}</button><button class="icon-btn" onclick="removePark('${esc(x.key)}','${kind}')">🗑️</button></div>`).join("");
+}
+function toggleBought(key,val){if(val){if(!state.shopping.bought.some(x=>x.key===key)){const p=shoppingEntries().find(x=>x.key===key);if(p)state.shopping.bought.push(p)}}else state.shopping.bought=state.shopping.bought.filter(x=>x.key!==key);save();render()}
+function park(key,kind){
+ const p=shoppingEntries().find(x=>x.key===key);if(!p)return;
+ if(!state.shopping[kind].some(x=>x.key===key))state.shopping[kind].push({...p});
+ state.shopping.bought=state.shopping.bought.filter(x=>x.key!==key);
+ if(kind==="rare"&&p.productId){const src=p.type==="other"?state.other:state.products;const obj=src.find(x=>x.id===p.productId);if(obj)obj.autoBlocked=true;}
+ save();render();toast(kind==="defer"?"Guardado para después 💗":kind==="later"?"Guardado para más adelante 🕐":"Marcado como “No suelo comprar” 🚫")
+}
+function restorePark(key,kind){
+ const item=(state.shopping[kind]||[]).find(x=>x.key===key);
+ state.shopping[kind]=state.shopping[kind].filter(x=>x.key!==key);
+ if(kind==="rare"&&item){const src=item.type==="other"?state.other:state.products;const p=src.find(x=>x.id===item.productId);if(p)p.autoBlocked=false;}
+ save();render();
+}
+function removePark(key,kind){state.shopping[kind]=state.shopping[kind].filter(x=>x.key!==key);save();render()}
+function blockAuto(key){
+ const p=shoppingEntries().find(x=>x.key===key);if(!p)return;
+ const src=p.type==="other"?state.other:state.products;const obj=src.find(x=>x.id===p.productId);
+ if(obj){obj.autoBlocked=true;save();render();toast("No volverá automáticamente 🚫")}
+}
+function finishShopping(){
+ const active=shoppingEntries().filter(p=>!state.shopping.defer.some(x=>x.key===p.key)&&!state.shopping.later.some(x=>x.key===p.key));
+ const bought=active.filter(p=>state.shopping.bought.some(x=>x.key===p.key));
+ if(!bought.length && !state.shopping.defer.length)return toast("Marca primero lo que has comprado 💗");
+ if(!confirm("¿Seguro que quieres finalizar la compra?"))return;
+ bought.forEach(x=>{const src=x.type==="other"?state.other:state.products;const p=src.find(p=>p.id===x.productId);if(p){p.status="have";p.manualShop=false;p.autoBlocked=false}});
+ state.shopping.bought=state.shopping.bought.filter(x=>!bought.some(y=>y.key===x.key));
+ const deferred=state.shopping.defer.splice(0);
+ save();render();toast(deferred.length?`Compra finalizada ✨ ${deferred.length} artículo${deferred.length===1?" vuelve":"s vuelven"} a la lista.`:"Compra finalizada ✨")
+}
+function renderCalendar(){
+ const weekStart=getWeekStart(state.calendarWeek||0), dates=[...Array(7)].map((_,i)=>addDays(weekStart,i));
+ const keyBase=weekKey(weekStart), planned=state.planning[keyBase]||{};
+ return `<div class="card"><div class="week-nav"><button class="btn" onclick="changeWeek(-1)">← Semana anterior</button><div><h3 style="margin:0">${formatDate(iso(weekStart))} – ${formatDate(iso(dates[6]))}</h3><div class="muted">Semana guardada: ${keyBase}</div></div><button class="btn" onclick="changeWeek(1)">Semana siguiente →</button></div>
+ <div class="toolbar"><button class="btn primary" onclick="generateWeek('${keyBase}')">✨ Generar semana</button><button class="btn soft" onclick="openWeekSettings()">⚙️ Noches sin cena: ${state.settings.nightOff}</button><button class="btn" onclick="showWeekDetail('${keyBase}')">📖 Ver detalle de esta semana</button></div>
+ <div class="week-grid">${dates.map((d,i)=>dayCard(d,i,keyBase,planned)).join("")}</div></div>`;
+}
+function getWeekStart(offset=0){const d=new Date();d.setHours(0,0,0,0);const day=d.getDay();d.setDate(d.getDate()-(day===0?6:day-1)+offset*7);return d}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+function iso(d){return d.toISOString().slice(0,10)}
+function weekKey(d){return iso(d)}
+function changeWeek(n){state.calendarWeek=(state.calendarWeek||0)+n;render()}
+const dayNames=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+function dayCard(d,i,key,planned){
+ const x=planned[i]||{};
+ return `<div class="day-card"><div class="day-name">${dayNames[i]}</div><div class="date">${formatDate(iso(d))}</div>
+ <div class="meal-slot"><strong>☀️ COMIDA</strong>${x.meal?.recipeId?`<button onclick="chooseCalendarRecipe('${key}',${i},'meal')">${esc(state.recipes.find(r=>r.id===x.meal.recipeId)?.name||"Receta eliminada")}</button>`:`<button onclick="chooseCalendarRecipe('${key}',${i},'meal')">＋ Elegir comida</button>`}</div>
+ <div class="meal-slot ${x.dinner?.free?"free":""}"><strong>🌙 CENA</strong>${x.dinner?.free?`<span>Noche libre 💗</span>`:x.dinner?.recipeId?`<button onclick="chooseCalendarRecipe('${key}',${i},'dinner')">${esc(state.recipes.find(r=>r.id===x.dinner.recipeId)?.name||"Receta eliminada")}</button>`:`<button onclick="chooseCalendarRecipe('${key}',${i},'dinner')">＋ Elegir cena</button>`}</div>
+ <div style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn soft" onclick="regenerateSlot('${key}',${i},'meal')">🔄 Comida</button><button class="btn soft" onclick="regenerateSlot('${key}',${i},'dinner')">🔄 Cena</button><button class="btn" onclick="setFreeDay('${key}',${i})">🌙 Libre</button></div></div>`;
+}
+function generateWeek(key){
+ if(!state.recipes.length)return toast("Necesitas al menos una receta 🌸");
+ const off=Math.min(7,Math.max(0,Number(state.settings.nightOff)||0));const freeDays=new Set([...Array(7).keys()].sort(()=>Math.random()-.5).slice(0,off));
+ const plan={};
+ for(let i=0;i<7;i++){plan[i]={meal:{recipeId:pickRecipe("meal",plan,i)?.id||null},dinner:freeDays.has(i)?{free:true}:{recipeId:pickRecipe("dinner",plan,i)?.id||null}}}
+ state.planning[key]=plan;save();render();toast("Semana generada con variedad ✨")
+}
+function pickRecipe(kind,plan,i){
+ const candidates=state.recipes.filter(r=>kind==="meal"?r.type!=="dinner":r.type!=="meal");if(!candidates.length)return null;
+ const scores=candidates.map(r=>{let s=recipeAvailability(r);const recent=Object.values(plan).slice(Math.max(0,i-3),i).flatMap(x=>[x.meal?.recipeId,x.dinner?.recipeId]);if(recent.includes(r.id))s-=35;return {r,s:s+Math.random()*15}}).sort((a,b)=>b.s-a.s);return scores[0]?.r||null;
+}
+function chooseCalendarRecipe(key,i,slot){
+ const valid=state.recipes.filter(r=>slot==="meal"?r.type!=="dinner":r.type!=="meal");if(!valid.length)return toast("No hay recetas válidas para este tipo");
+ const opts=valid.map((r,j)=>`${j+1}. ${r.name}`).join("\n");
+ const n=prompt(`Elige una receta escribiendo su número:\\n\\n${opts}`);const idx=Number(n)-1;if(!Number.isInteger(idx)||!valid[idx])return;
+ state.planning[key]=state.planning[key]||{};state.planning[key][i]=state.planning[key][i]||{};state.planning[key][i][slot]={recipeId:valid[idx].id};save();render()
+}
+function regenerateSlot(key,i,slot){
+ const plan=state.planning[key]||{};const r=pickRecipe(slot,plan,i);if(!r)return toast("No hay recetas válidas");
+ state.planning[key]=plan;plan[i]=plan[i]||{};plan[i][slot]={recipeId:r.id};save();render();toast("Comida regenerada ✨")
+}
+function setFreeDay(key,i){state.planning[key]=state.planning[key]||{};state.planning[key][i]=state.planning[key][i]||{};state.planning[key][i].dinner={free:true};save();render()}
+function openWeekSettings(){
+ modal(`<h3>🌙 Planificación semanal</h3><p>¿Cuántas noches no vas a cenar?</p><select class="select" id="nightOff">${[0,1,2,3,4,5,6,7].map(n=>`<option ${n===state.settings.nightOff?"selected":""}>${n}</option>`).join("")}</select><div class="notice" style="margin-top:12px">Las noches libres se asignan al generar una semana. Puedes cambiarlas manualmente después.</div><div class="modal-actions"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveWeekSettings()">Guardar</button></div>`)
+}
+function saveWeekSettings(){state.settings.nightOff=Number(document.getElementById("nightOff").value);save();closeModal();render()}
+function showWeekDetail(key){
+ const p=state.planning[key]||{};const html=[0,1,2,3,4,5,6].map(i=>{const x=p[i]||{};const m=x.meal?.recipeId?state.recipes.find(r=>r.id===x.meal.recipeId)?.name:"—";const d=x.dinner?.free?"Noche libre":x.dinner?.recipeId?state.recipes.find(r=>r.id===x.dinner.recipeId)?.name:"—";return `<div class="detail-day"><b>${dayNames[i]}</b><div>☀️ ${esc(m||"—")}</div><div>🌙 ${esc(d||"—")}</div></div>`}).join("");
+ modal(`<h3>📖 Detalle de la semana</h3><div class="calendar-detail">${html}</div><div class="modal-actions"><button class="btn primary" onclick="closeModal()">Cerrar</button></div>`)
+}
+function renderMealPrep(){
+ const key=weekKey(getWeekStart(state.calendarWeek||0)),p=state.planning[key]||{};
+ const days=state.settings.mealPrepDays||["Domingo","Miércoles"], excluded=state.settings.prepExcluded||[];
+ const recipeIds=Object.values(p).flatMap(x=>[x.meal?.recipeId,x.dinner?.recipeId]).filter(Boolean);
+ const recipes=recipeIds.map(id=>state.recipes.find(r=>r.id===id)).filter(Boolean);
+ const ing=new Map();recipes.forEach(r=>r.ingredients.forEach(i=>{const p=productByName(i.name);const cat=p?.category||"Sin categoría";if(!excluded.includes(cat)){if(!ing.has(i.name))ing.set(i.name,{name:i.name,qty:[],cat});if(i.qty)ing.get(i.name).qty.push(i.qty)}}));
+ return `<div class="card"><div class="section-head"><div><h3>🍱 Meal Prep</h3><span class="muted">Preparación basada en la semana actualmente seleccionada.</span></div><button class="btn primary" onclick="openPrepSettings()">⚙️ Configurar</button></div>
+ <div class="grid cols-2"><div><h4>📅 Días</h4><div class="checkbox-grid">${["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"].map(d=>`<label class="badge ${days.includes(d)?"pink":""}" style="cursor:pointer"><input type="checkbox" ${days.includes(d)?"checked":""} onchange="togglePrepDay('${d}',this.checked)"> ${d}</label>`).join("")}</div><p class="muted">Recomendación: 2 días por la nevera pequeña. Máximo 3.</p></div><div><h4>🚫 Categorías excluidas</h4><div class="checkbox-grid">${[...new Set([...state.categories,...state.otherCategories])].map(c=>`<label class="badge ${excluded.includes(c)?"pink":""}" style="cursor:pointer"><input type="checkbox" ${excluded.includes(c)?"checked":""} onchange="togglePrepExclude('${esc(c)}',this.checked)"> ${esc(c)}</label>`).join("")}</div></div></div>
+ <hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><h3>🥕 Preparaciones sugeridas</h3>${recipes.length?`<div class="product-list">${[...ing.values()].map(x=>`<div class="product"><div class="product-main"><div class="name">${esc(x.name)}</div><div class="sub">${esc(x.cat)}${x.qty.length?" · "+esc([...new Set(x.qty)].join(" / ")):""}</div></div><span class="badge green">preparar</span></div>`).join("")}</div><div class="success-box" style="margin-top:12px">Se han agrupado ingredientes repetidos para reducir trabajo y evitar ocupar demasiado espacio en la nevera. 🌸</div>`:`<div class="empty">Genera una semana en 📅 Calendario para que Meal Prep pueda analizarla.</div>`}</div>`;
+}
+function togglePrepDay(d,val){let a=state.settings.mealPrepDays||[];if(val&&a.length<3&&!a.includes(d))a.push(d);if(!val)a=a.filter(x=>x!==d);state.settings.mealPrepDays=a;save();render()}
+function togglePrepExclude(c,val){let a=state.settings.prepExcluded||[];if(val&&!a.includes(c))a.push(c);if(!val)a=a.filter(x=>x!==c);state.settings.prepExcluded=a;save();render()}
+function openPrepSettings(){toast("Selecciona los días y exclusiones directamente en esta pantalla 💗")}
+function modal(content){closeModal();const d=document.createElement("div");d.className="modal-backdrop";d.id="modalRoot";d.innerHTML=`<div class="modal">${content}</div>`;d.addEventListener("click",e=>{if(e.target===d)closeModal()});document.body.appendChild(d)}
+function closeModal(){document.getElementById("modalRoot")?.remove()}
+function openSettings(){
+ modal(`<h3>⚙️ Configuración</h3><div class="field"><label>Caducan pronto: próximos días</label><input class="input" id="setExpiry" type="number" min="0" value="${state.settings.expiryDays}"></div>
+ <div class="notice" style="margin-top:12px">Los datos se almacenan en localStorage de este navegador. Cerrar o recargar la web no los borra.</div>
+ <div class="modal-actions"><button class="btn danger" onclick="resetAll()">🗑️ Restablecer todo</button><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveSettings()">Guardar</button></div>`)
+}
+function saveSettings(){state.settings.expiryDays=Math.max(0,Number(document.getElementById("setExpiry").value)||0);save();closeModal();render()}
+function resetAll(){if(!confirm("Esto borrará todos tus datos guardados en esta web. ¿Continuar?"))return;localStorage.removeItem(KEY);state=initialState();closeModal();render();toast("Datos restablecidos")}
+function showDataHelp(){modal(`<h3>💾 Datos y persistencia</h3><p>Esta versión guarda automáticamente productos, categorías, recetas, planificación, compras, exclusiones, configuración y orden del menú en el navegador.</p><p class="muted">No necesitas crear una cuenta ni servidor para usarla. Si borras los datos del sitio desde el navegador, también se borrará la información de la aplicación.</p><div class="modal-actions"><button class="btn primary" onclick="closeModal()">Entendido</button></div>`)}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+render();
+</script>
+
+<script>
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
